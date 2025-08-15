@@ -262,8 +262,7 @@ class _GroupListScreenState extends State<GroupListScreen> {
                 onDelete: () => _deleteGrupo(grupo),
               ),
             )),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -298,7 +297,7 @@ class _GroupListScreenState extends State<GroupListScreen> {
 
   void _navigateToGroupDetails(Grupo grupo) {
     // Navegar para detalhes do grupo
-    context.push('/tagDetails', extra: grupo);
+    context.push('/groupDetails', extra: grupo);
   }
 
   void _editGrupo(Grupo grupo) {
@@ -384,108 +383,329 @@ class GrupoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
+    final hasAlerts = _hasTemperatureAlerts();
+    
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: hasAlerts 
+            ? BorderSide(color: Colors.orange.shade300, width: 2)
+            : BorderSide.none,
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header do grupo
               Row(
                 children: [
-                  const Icon(Icons.folder_open),
-                  const SizedBox(width: 8.0),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: grupo.isActive ? Colors.green.shade100 : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      grupo.isActive ? Icons.folder_open : Icons.folder_off,
+                      color: grupo.isActive ? Colors.green.shade700 : Colors.grey.shade600,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                grupo.nome,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            if (hasAlerts)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade100,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'ALERTA',
+                                  style: TextStyle(
+                                    color: Colors.orange.shade700,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
                         Text(
-                          group.name,
-                          style: const TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.bold,
+                          'Criado em ${_formatDate(grupo.dataCriacao)}',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
                           ),
                         ),
-                        Text(group.description),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8.0),
-                  Row(
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'edit':
+                          onEdit();
+                          break;
+                        case 'delete':
+                          onDelete();
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: 16),
+                            SizedBox(width: 8),
+                            Text('Editar'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, size: 16, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Excluir', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    child: const Icon(Icons.more_vert, color: Colors.grey),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Informações do grupo
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInfoChip(
+                      Icons.thermostat,
+                      grupo.temperaturaRange,
+                      Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildInfoChip(
+                      Icons.nfc,
+                      '${tags.length} tags',
+                      Colors.green,
+                    ),
+                  ),
+                  if (grupo.quantidadeMinLeitura != null)
+                    Expanded(
+                      child: _buildInfoChip(
+                        Icons.bar_chart,
+                        'Min: ${grupo.quantidadeMinLeitura}',
+                        Colors.purple,
+                      ),
+                    ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Preview das tags
+              const Text(
+                'Tags Associadas:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              if (tags.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
                     children: [
-                      Icon(Icons.remove_red_eye, color: Colors.grey.shade600),
-                      const SizedBox(width: 4.0),
+                      Icon(Icons.info_outline, color: Colors.grey.shade600),
+                      const SizedBox(width: 8),
                       Text(
-                        group.tagsCount.toString(),
+                        'Nenhuma tag associada a este grupo',
                         style: TextStyle(color: Colors.grey.shade600),
                       ),
                     ],
                   ),
-                  const SizedBox(width: 8.0),
-                  const Icon(Icons.arrow_forward_ios, size: 16.0),
-                ],
-              ),
-              const SizedBox(height: 8.0),
-              Row(
-                children: [
-                  const Icon(Icons.thermostat, size: 16.0),
-                  const SizedBox(width: 4.0),
-                  Text(group.temperatureRange),
-                  const SizedBox(width: 16.0),
-                  const Icon(Icons.bar_chart, size: 16.0),
-                  const SizedBox(width: 4.0),
-                  Text('Min. leituras: ${group.minReadings}'),
-                ],
-              ),
-              const SizedBox(height: 16.0),
-              const Text(
-                'Preview das tags:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8.0),
-              if (group.tagsPreview.isEmpty)
-                Text(
-                  'Nenhuma tag neste grupo',
-                  style: TextStyle(color: Colors.grey),
                 )
               else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: group.tagsPreview.length,
-                  itemBuilder: (context, index) {
-                    final tag = group.tagsPreview[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8.0,
-                            height: 8.0,
-                            decoration: BoxDecoration(
-                              color: tag.statusColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8.0),
-                          Expanded(child: Text(tag.name)),
-                          Text(tag.temp),
-                          const SizedBox(width: 8.0),
-                          const Icon(
-                            Icons.refresh,
-                            size: 16.0,
-                            color: Colors.grey,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                Column(
+                  children: tags.take(3).map((tag) => _buildTagPreview(tag)).toList(),
+                ),
+              
+              if (tags.length > 3)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '+${tags.length - 3} tags adicionais',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
                 ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildInfoChip(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: _getDarkerColor(color)),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: _getDarkerColor(color),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getDarkerColor(Color color) {
+    if (color == Colors.blue) return Colors.blue.shade700;
+    if (color == Colors.green) return Colors.green.shade700;
+    if (color == Colors.purple) return Colors.purple.shade700;
+    return color;
+  }
+
+  Widget _buildTagPreview(Tag tag) {
+    final readings = lastReadings[tag.id] ?? [];
+    final lastReading = readings.isNotEmpty ? readings.first : null;
+    
+    Color statusColor;
+    if (!tag.isActive) {
+      statusColor = Colors.grey;
+    } else if (lastReading != null) {
+      switch (lastReading.status) {
+        case ReadingStatus.ok:
+          statusColor = Colors.green;
+          break;
+        case ReadingStatus.alerta:
+          statusColor = Colors.orange;
+          break;
+        case ReadingStatus.critico:
+          statusColor = Colors.red;
+          break;
+        case ReadingStatus.erro:
+          statusColor = Colors.red.shade800;
+          break;
+      }
+    } else {
+      statusColor = Colors.grey;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: statusColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              tag.tagCode,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+          if (lastReading != null)
+            Text(
+              lastReading.temperaturaFormatted,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: statusColor,
+              ),
+            )
+          else
+            Text(
+              'Sem dados',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          const SizedBox(width: 8),
+          Icon(
+            tag.status.isActive ? Icons.check_circle : Icons.pause_circle,
+            size: 16,
+            color: tag.status.isActive ? Colors.green : Colors.grey,
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _hasTemperatureAlerts() {
+    for (final tag in tags) {
+      final readings = lastReadings[tag.id] ?? [];
+      if (readings.isNotEmpty) {
+        final lastReading = readings.first;
+        if (lastReading.status.needsAttention) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 }

@@ -1,11 +1,13 @@
 import 'package:app/views/auth/login.dart';
 import 'package:app/views/groups/create_groups.dart';
 import 'package:app/views/groups/group_list.dart';
+import 'package:app/views/groups/groups_detail.dart';
 import 'package:app/views/groups/select_group.dart';
 import 'package:app/views/home.dart';
 import 'package:app/views/tag/details_tag.dart';
 import 'package:app/views/tag/leitura_tags.dart';
 import 'package:app/service/auth_service.dart';
+import 'package:app/service/models.dart';
 import 'package:go_router/go_router.dart';
 
 final GoRouter router = GoRouter(
@@ -46,6 +48,12 @@ final GoRouter router = GoRouter(
      GoRoute(
       path: '/createGroup',
       builder: (context, state) => CreateGroupScreen(),
+    ),
+     GoRoute(
+      path: '/groupDetails',
+      builder: (context, state) => GroupDetailsScreen(
+        grupo: state.extra as Grupo?,
+      ),
     ),
      GoRoute(
       path: '/tagDetails',
